@@ -1,9 +1,135 @@
 import wollok.game.*
 import granja.*
 describe "test de la granja" {
+	method initialize(){
+		game.width(10)
+		game.height(10)
+	}
 
+	test "plantar tomaco y trigo respeta parcelas ocupadas" {
+		personaje.position(game.at(5, 5))
 
-    test "personaje" {
-        assert.that(true)
+		personaje.plantar(tomaco)
+		assert.equals(game.at(5, 5), tomaco.position())
+		assert.equals(1, granja.cultivos().size())
+		assert.that(granja.cultivos().contains(tomaco))
+
+		assert.throwsException({ personaje.plantar(trigo) })
+
+		personaje.position(game.at(6, 6))
+		assert.throwsException({ personaje.plantar(tomaco) })
+
+		personaje.plantar(trigo)
+		assert.equals(game.at(6, 6), trigo.position())
+		assert.equals(2, granja.cultivos().size())
+		assert.that(granja.cultivos().contains(tomaco) and granja.cultivos().contains(trigo))
     }
+}
+
+describe "regar" {
+
+	method initialize() {
+		game.width(10)
+		game.height(10)
+	}
+
+	test "regar sin cultivo lanza error" {
+		personaje.position(game.at(2, 2))
+		assert.throwsException({ personaje.regarPlanta() })
+	}
+
+	test "regar maiz lo hace pasar de bebe a adulto y luego no cambia" {
+		personaje.position(game.at(1, 1))
+		personaje.plantar(maiz)
+		assert.equals("maiz_bebe.png", maiz.image())
+
+		personaje.regarPlanta()
+		assert.equals("maiz_adulto.png", maiz.image())
+
+		personaje.regarPlanta()
+		assert.equals("maiz_adulto.png", maiz.image())
+	}
+
+	test "regar trigo avanza etapas y cicla de 3 a 0" {
+		personaje.position(game.at(2, 2))
+		personaje.plantar(trigo)
+		assert.equals("trigo_0.png", trigo.image())
+
+		personaje.regarPlanta()
+		assert.equals("trigo_1.png", trigo.image())
+
+		personaje.regarPlanta()
+		assert.equals("trigo_2.png", trigo.image())
+
+		personaje.regarPlanta()
+		assert.equals("trigo_3.png", trigo.image())
+
+		personaje.regarPlanta()
+		assert.equals("trigo_0.png", trigo.image())
+	}
+
+	test "regar tomaco lo mueve hacia arriba y respeta parcelas ocupadas" {
+		game.width(5)
+		game.height(5)
+
+		personaje.position(game.at(3, 3))
+		personaje.plantar(tomaco)
+
+		personaje.regarPlanta()
+		assert.equals(game.at(3, 4), tomaco.position())
+
+		personaje.position(game.at(3, 4))
+		personaje.regarPlanta()
+		assert.equals(game.at(3, 0), tomaco.position())
+
+		personaje.position(game.at(3, 1))
+		personaje.plantar(trigo)
+
+		personaje.position(game.at(3, 0))
+		personaje.regarPlanta()
+		assert.equals(game.at(3, 0), tomaco.position())
+	}
+
+}
+
+describe "cosechar" {
+
+	method initialize() {
+		game.width(10)
+		game.height(10)
+	}
+
+	test "cosechar tomaco, maiz y trigo respeta si estan listos" {
+		personaje.position(game.at(3, 3))
+
+		assert.throwsException({ personaje.cosecharPlanta() })
+
+		personaje.plantar(tomaco)
+		personaje.cosecharPlanta()
+		assert.that(granja.cultivos().isEmpty())
+		assert.that(granja.cultivosCosechados().contains(tomaco))
+
+		personaje.plantar(maiz)
+		assert.throwsException({ personaje.cosecharPlanta() })
+
+		personaje.regarPlanta()
+		personaje.cosecharPlanta()
+		assert.that(granja.cultivos().isEmpty())
+		assert.that(granja.cultivosCosechados().contains(tomaco) && granja.cultivosCosechados().contains(maiz))
+
+		personaje.plantar(trigo)
+		assert.throwsException({ personaje.cosecharPlanta() })
+
+		personaje.regarPlanta()
+		assert.throwsException({ personaje.cosecharPlanta() })
+
+		personaje.regarPlanta()
+		assert.that(trigo.sePuedeCosechar())
+
+		personaje.regarPlanta()
+		personaje.cosecharPlanta()
+		assert.that(granja.cultivos().isEmpty())
+		assert.that(granja.cultivosCosechados().contains(tomaco) && granja.cultivosCosechados().contains(maiz) && granja.cultivosCosechados().contains(trigo))
+	}
+
 }

@@ -1,6 +1,5 @@
 import wollok.game.*
-import personaje.*
-import cultivos.*
+import granja.*
 
 program lagranja {
 	//  CONFIG	
@@ -8,10 +7,22 @@ program lagranja {
 	game.height(10)
 	game.width(10)
 	game.ground("fondo.png")
-
- 	game.addVisualCharacter(personaje)
  	
+	keyboard.g().onPressDo({personaje.cambiarGenero()})
+	
+	keyboard.m().onPressDo({personaje.plantar(maiz)})
+	keyboard.t().onPressDo({personaje.plantar(trigo)})
+	keyboard.o().onPressDo({personaje.plantar(tomaco)})
+	keyboard.r().onPressDo({personaje.regarPlanta()})
+	keyboard.c().onPressDo({personaje.cosecharPlanta()})
+	keyboard.space().onPressDo({personaje.decirCosechasParaVender()})
+	
+	game.addVisual(mercado)
+ 	game.addVisualCharacter(personaje)
 
+    game.onCollideDo(mercado, { personaje => personaje.venderTodo()})
+    //game.say(personaje, "Opa! Me llevé puesta una caja!")
  	//  COMIENZA
 	game.start()
 }
+	
